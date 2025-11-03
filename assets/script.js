@@ -17,6 +17,17 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('contacts', JSON.stringify(contacts));
     }
 
+    // Function to edit a contact
+    function editContact(index){
+        const contact = contacts[index];
+        console.log(contact);
+        document.getElementById('name').value = contact.name;
+        phoneInput.value = contact.phone;
+        document.getElementById('email').value = contact.email;
+        editIndexInput.value = index;
+        saveBtn.textContent = 'Salvar Alterações';
+    }
+
     // Function to render list of contacts in table
     function renderContacts(filter=''){
         contactList.innerHTML = '';
@@ -32,16 +43,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${contact.phone}</td>
                 <td>${contact.email}</td>
                 <td>
-                    <button class="edit-btn action-button" onlclick="editContact(${index})>Editar</td>
-                    <button class="delete-btn action-button" onclick="deleteContact(${index})">Deletar</button>
+                    <button id="btn-edit-${index}" class="edit-btn action-button">Editar</button><br>
+                    <button id="btn-del-${index}" class="delete-btn action-button">Deletar</button>
                 </td>
                 `;
                 contactList.appendChild(row);
+                document.getElementById(`btn-edit-${index}`).addEventListener('click', () => {
+                    editContact(index);
+                });
+                document.getElementById(`btn-del-${index}`).addEventListener('click', () => {
+                    deleteContact(index)
+                });
             }
         })
     }
 
-    searchInput.addEventListener('input', renderContacts(searchInput.value));
+    // Function to delete a contact
+    function deleteContact(index){
+        contacts.splice(index, 1);
+        saveContacts();
+        searchInput.value = '';
+        renderContacts();
+        form.reset();
+    }
+
+    // Function to export contacts to xlsx
+    function exportToExcel(){
+        const workhsheet = XLSX.utils.json_to_sheet(contacts);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, workhsheet, 'Contatos');
+        XLSX.utils.sheet_add_aoa(workhsheet, [['Nome', 'Telefone', 'E-mail']], {origin: 'A1'})
+        XLSX.writeFile(workbook, 'agenda_contatos.xlsx');
+    }
+
+    // Render all the contacts saved
+    renderContacts();
+
+    // Input event listener for search input
+    searchInput.addEventListener('input', () => renderContacts(searchInput.value));
 
     // Event handler to apply mask to phone field
     phoneInput.addEventListener('input', (e) => {
@@ -121,5 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderContacts();
         form.reset();
     })
+
+    // Adding event listener click to 'Export to Excel' button
+    exportBtn.addEventListener('click', exportToExcel);
 
 });
